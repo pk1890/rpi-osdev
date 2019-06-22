@@ -1,0 +1,35 @@
+.section ".text.boot"
+
+.global _start
+
+_start:
+    mrc p15, #0, r1, c0, c0, #5
+    and r1, r1, #3
+    cmp r1, #0 ;Turn off three out of four cores
+    bne halt
+
+    mov sp, #0x8000
+    ldr r4, =__bss_start
+    ldr r9, =__bss_end
+
+;;;; zeroing BSS
+    mov r5, #0
+    mov r6, #0
+    mov r7, #0
+    mov r8, #0
+    b       2f
+
+1:
+    stmia r4!, {r5-r8} ; write 16 zeros to r4, increment r4 by 16
+2:
+    cmp r4, r9
+    blo 1b ;do 1 until all BSS is zeroed
+
+;;;;
+
+    ldr r3, =kernel_main
+    blx r3
+
+halt:
+    wfe
+    b halt
